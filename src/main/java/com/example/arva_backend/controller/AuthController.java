@@ -1,14 +1,18 @@
 package com.example.arva_backend.controller;
 
+import com.example.arva_backend.model.dto.UserDTO;
 import com.example.arva_backend.model.entity.User;
 import com.example.arva_backend.repository.UserRepository;
 import com.example.arva_backend.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -19,14 +23,20 @@ public class AuthController {
     @Autowired
     private UserRepository userRepository;
 
-    @GetMapping("/users")
-    public ResponseEntity<?> findUser(@RequestParam @Valid String email){
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody @Valid UserDTO userDTO){
         try{
-            User user = authService.findUser(email);
-            System.out.println(email);
-            System.out.println(user);
+            User savedUser = authService.createUser(userDTO);
 
-            return ResponseEntity.ok(user);
+            // Remove password for response
+            savedUser.setPassword(null);
+
+            Map<String, Object> response = new HashMap<>();
+
+            response.put("message", "Register successfully");
+            response.put("user", savedUser);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException e){
             return ResponseEntity
                     .badRequest()
